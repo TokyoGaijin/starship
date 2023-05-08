@@ -1,27 +1,35 @@
+import pygame
 import random
+import os
 import pyttsx3
+import threading
 
 def dice(sides):
     return random.randrange(1, sides + 1)
 
 class Officer:
-    def __init__(self, race, rank, name, position, gender = "male"):
+    def __init__(self, race, rank, name, position, gender = "male", surface = None):
         self.race = race
         self.rank = rank
         self.name = name
         self.department = position
         self.gender = gender
+        self.surface = surface # for use with Captain Characters
         self.skill = 0
         self.luck = 0
         self.charm = 0
         self.competency = (None, 0)
         self.engine = pyttsx3.init()
         self.voice = self.engine.getProperty('voices')
+        self.avatar = pygame.transform.scale(pygame.image.load(os.path.join("avatars", f"capt_{self.race}_{self.gender}.png")), (67, 82))
+        self.avatarX = 339
+        self.avatarY = 357
         if self.gender == "male":
             self.engine.setProperty('voice', self.voice[0].id)
         else:
             self.engine.setProperty('voice', self.voice[1 if dice(6) > 3 else 2].id)
         self.isAlive = True
+        self.avatarVisible = False
 
     def train_officer(self):
         bonus = 0
@@ -56,8 +64,16 @@ class Officer:
         self.competency = (self.department, (year1 + year2 + year3 + year4))
 
     def say(self, quote):
-        self.engine.say(quote)
-        self.engine.runAndWait()
+        thread1 = threading.Thread(target=self.engine.say(quote))
+        thread2 = threading.Thread(target=self.engine.runAndWait())
+        thread1.start()
+        thread2.start()
+
+
+
+    def draw(self):
+        if self.avatarVisible:
+            self.surface.blit(self.avatar, (self.avatarX, self.avatarY))
 
 
 
